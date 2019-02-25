@@ -1,2 +1,2 @@
 # MyPetPro
-My pet pro Rest API
+Pet Vet Pro
