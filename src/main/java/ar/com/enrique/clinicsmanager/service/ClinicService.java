@@ -20,9 +20,6 @@ public class ClinicService {
     @Autowired
     private ClinicRepository clinicRepository;
 
-
-
-
     public void saveClinic(Clinic clinic) {
         clinicRepository.save(clinic);
     }

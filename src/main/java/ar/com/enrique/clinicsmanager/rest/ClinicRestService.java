@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -67,12 +68,10 @@ public class ClinicRestService {
     public ResponseEntity<PageResponse<Clinic>> getAll(@Context HttpServletRequest request,
                                                        @ApiParam(value = "nombre de la clinica") @RequestParam(value = "name", required = false) String name,
                                                        @ApiParam(value = "nro de pagina a devolver") @RequestParam(value = "page-number", required = false, defaultValue = "0") String pageNumber,
-                                                       @ApiParam(value = "cantidad de resultados a devolver") @RequestParam(value = "page-size", required = false,defaultValue = AppConstants.DEFAULT_PAGE_SIZE ) String pageSize) {
+                                                       @ApiParam(value = "cantidad de resultados a devolver") @RequestParam(value = "page-size", required = false, defaultValue = AppConstants.DEFAULT_PAGE_SIZE) String pageSize) {
 
         PageResponse<Clinic> page = clinicService.findAllClinics(new PageRequest(Integer.valueOf(pageNumber), Integer.valueOf(pageSize)), name);
         return new ResponseEntity<>(page, getHeadersOk(), HttpStatus.OK);
-        //  return ResponseEntity.status(HttpStatus.ACCEPTED).body(page);
-//                ok(page);
     }
 
     @PostMapping("/saveclinic")
@@ -83,9 +82,12 @@ public class ClinicRestService {
             @ApiResponse(code = 401, message = "Usuario no autenticado"),
             @ApiResponse(code = 403, message = "Usuario no autorizado")})
     public ResponseEntity<?> saveClinic(@Context HttpServletRequest request,
-                                        @ApiParam(value = "Json representativo de una clinica") @RequestBody Clinic clinic) {
+                                        @ApiParam(value = "Json representativo de una clinica") @RequestBody Clinic clinic,
+                                        UriComponentsBuilder ucBuilder) {
         clinicService.saveClinic(clinic);
-        return new ResponseEntity<>("", getHeadersOk(), HttpStatus.ACCEPTED);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(ucBuilder.path("/clinics/{clinicId}").buildAndExpand(clinic.getClinicId()).toUri());
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
     private HttpHeaders getHeadersOk() {

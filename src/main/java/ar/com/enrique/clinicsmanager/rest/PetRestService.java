@@ -1,7 +1,10 @@
 package ar.com.enrique.clinicsmanager.rest;
 
 import ar.com.enrique.clinicsmanager.common.PageRequest;
+import ar.com.enrique.clinicsmanager.model.Clinic;
 import ar.com.enrique.clinicsmanager.model.Pet;
+import ar.com.enrique.clinicsmanager.model.PetOwner;
+import ar.com.enrique.clinicsmanager.service.PetOwnerService;
 import ar.com.enrique.clinicsmanager.service.PetService;
 import ar.com.enrique.clinicsmanager.utils.AppConstants;
 import io.swagger.annotations.ApiOperation;
@@ -13,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -29,6 +33,9 @@ public class PetRestService {
 
     @Autowired
     private PetService petService;
+
+    @Autowired
+    private PetOwnerService petOwnerService;
 
     @GetMapping("/pets")
     @ApiOperation(value = "Devuelve la lista de mascotas por dueño", notes = "Lista de mascotas", response = Pet.class)
@@ -101,12 +108,20 @@ public class PetRestService {
             @ApiResponse(code = 403, message = "Usuario no autorizado")})
     public ResponseEntity<?> savePet(@Context HttpServletRequest request,
                                         @ApiParam(value = "Json representativo de una mascota") @RequestBody Pet pet,
-                                        @ApiParam(value = "id del dueño") @RequestParam(value = "petOwnerId", required = true) String id) {
-        if (pet.getUser().getPetOwnerId() == null) {
-            if (id != null) pet.getUser().setPetOwnerId(Long.valueOf(id));
+                                        @ApiParam(value = "id del dueño") @RequestParam(value = "petOwnerId", required = true) String id,
+                                     UriComponentsBuilder ucBuilder) {
+        if (pet.getUser() == null) {
+            if (id != null) {
+                List<PetOwner> petOwners = petOwnerService.findAll(null,id);
+                if (petOwners.size()>0){
+                    pet.setUser(petOwners.get(0));
+                }
+            }
         }
         petService.savePet(pet);
-        return new ResponseEntity<>("", getHeadersOk(), HttpStatus.ACCEPTED);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(ucBuilder.path("/pets/{petId}").buildAndExpand(pet.getPetId()).toUri());
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
     private HttpHeaders getHeadersOk() {

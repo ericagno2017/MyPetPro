@@ -17,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -32,6 +33,9 @@ public class PetOwnerRestService {
 
     @Autowired
     private PetOwnerService petOwnerService;
+
+    @Autowired
+    private ClinicService clinicService;
 
     @GetMapping("/petowners")
     @ApiOperation(value = "Devuelve la lista de dueños por clinica", notes = "Lista de dueños", response = PetOwner.class)
@@ -49,7 +53,7 @@ public class PetOwnerRestService {
         return new ResponseEntity<>(returnResult, getHeadersOk(), HttpStatus.OK);
     }
 
-    @GetMapping("/petOwners/{petOwnerId}")
+    @GetMapping("/petowners/{petOwnerId}")
     @ApiOperation(value = "Devuelve un dueño", notes = "Dueño", response = PetOwner.class)
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Error interno del sistema => Ver code y message lanzados"),
@@ -107,12 +111,21 @@ public class PetOwnerRestService {
             @ApiResponse(code = 403, message = "Usuario no autorizado")})
     public ResponseEntity<?> savePetOwner(@Context HttpServletRequest request,
                                         @ApiParam(value = "Json representativo de un dueño") @RequestBody PetOwner petOwner,
-                                        @ApiParam(value = "id de la clinica") @RequestParam(value = "clinicId", required = true) String id) {
-        if (petOwner.getClinic().getClinicId() == null) {
-            if (id != null) petOwner.getClinic().setClinicId(Long.valueOf(id));
+                                        @ApiParam(value = "id de la clinica") @RequestParam(value = "clinicId", required = true) String id,
+                                          UriComponentsBuilder ucBuilder) {
+        if (petOwner.getClinic() == null) {
+            if (id != null) {
+                List<Clinic> clinicas = clinicService.findAll(null,id);
+                if (clinicas.size()>0){
+                    petOwner.setClinic(clinicas.get(0));
+                }
+            }
+
         }
         petOwnerService.savePetOwner(petOwner);
-        return new ResponseEntity<>("", getHeadersOk(), HttpStatus.ACCEPTED);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(ucBuilder.path("/petOwners/{petOwnerId}").buildAndExpand(petOwner.getPetOwnerId()).toUri());
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
     private HttpHeaders getHeadersOk() {
