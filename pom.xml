@@ -33,6 +33,9 @@
         <commons-collection4.version>4.1</commons-collection4.version>
         <commons-lang3.version>3.7</commons-lang3.version>
 
+            <spring-cloud-dependencies.version>Brixton.SR7</spring-cloud-dependencies.version>
+            <postgresql.version>9.4-1201-jdbc4</postgresql.version>
+
     </properties>
 
     <dependencies>
@@ -158,13 +161,11 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
-            <!--<scope>runtime</scope>-->
         </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat</groupId>
@@ -194,6 +195,20 @@
 
 
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
 
     <build>
 
