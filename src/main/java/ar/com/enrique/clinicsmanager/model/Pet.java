@@ -10,7 +10,7 @@ import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity
-@Table(name = "MASCOTA")
+@Table(name = "mascota")
 public class Pet extends BackEndEntity {
 
     @JsonProperty("PET_ID")
